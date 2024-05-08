@@ -1,58 +1,89 @@
+import heapq
+
 class Graph:
     def __init__(self, vertices):
         self.vertices = vertices
-        self.graph = [[] for _ in range(vertices)]
-        self.colored = []
+        self.graph = [[0] * vertices for _ in range(vertices)]
 
-    def add_edge(self, u, v):
-        self.graph[u].append(v)
-        self.graph[v].append(u)
-
-    def is_safe(self, v, color, colored):
-        for i in self.graph[v]:
-            if colored[i] == color:
+    def is_safe(self, v, color, c):
+        for i in range(self.vertices):
+            if self.graph[v][i] == 1 and color[i] == c:
                 return False
         return True
 
-    def graph_coloring(self, m):
-        colored = [-1] * self.vertices
-        if not self.graph_coloring_util(0, m, colored):
-            return False
-        self.colored = colored
-        return True
+    def graph_coloring_backtracking(self, color_set):
+        color = [None] * self.vertices
+        self._graph_coloring_util_backtracking(color_set, color, 0)
+        num_colors_used = len(set(color))
+        print("Minimum number of colors used (Backtracking):", num_colors_used)
+        print("Graph coloring:")
+        for i, c in enumerate(color):
+            print(f"Vertex {i} colored with: {c}")
 
-    def graph_coloring_util(self, v, m, colored):
+    def _graph_coloring_util_backtracking(self, color_set, color, v):
         if v == self.vertices:
             return True
 
-        for color in range(1, m + 1):
-            if self.is_safe(v, color, colored):
-                colored[v] = color
-                if self.graph_coloring_util(v + 1, m, colored):
+        for c in color_set:
+            if self.is_safe(v, color, c):
+                color[v] = c
+                if self._graph_coloring_util_backtracking(color_set, color, v + 1):
                     return True
-                colored[v] = -1
+                color[v] = None
 
-        return False
+    def graph_coloring_branch_and_bound(self, color_set):
+        def bound(v):
+            max_used_color = max(color[:v]) if v > 0 else 0
+            return max_used_color
 
+        def _graph_coloring():
+            pq = [(0, [-1] * self.vertices)]
+            while pq:
+                used_colors, coloring = heapq.heappop(pq)
+                v = coloring.index(-1) if -1 in coloring else self.vertices
+                if v == self.vertices:
+                    return coloring
+
+                for c in color_set:
+                    if self.is_safe(v, coloring, c):
+                        new_coloring = list(coloring)
+                        new_coloring[v] = c
+                        heapq.heappush(pq, (used_colors + 1, new_coloring))
+
+        coloring = _graph_coloring()
+        num_colors_used = len(set(coloring))
+        print("Minimum number of colors used (Branch and Bound):", num_colors_used)
+        print("Graph coloring:")
+        for i, c in enumerate(coloring):
+            print(f"Vertex {i} colored with: {c}")
 
 def main():
-    vertices = int(input("Enter the number of vertices: "))
-    edges = int(input("Enter the number of edges: "))
+    vertices = int(input("Enter the number of vertices in the graph: "))
+    g = Graph(vertices)
+    print("Enter the adjacency matrix of the graph:")
+    for i in range(vertices):
+        row = list(map(int, input().split()))
+        for j in range(vertices):
+            g.graph[i][j] = row[j]
 
-    graph = Graph(vertices)
+    while True:
+        print("\nSelect the method to solve the graph coloring problem:")
+        print("1. Backtracking")
+        print("2. Branch and Bound")
+        choice = input("Enter your choice (1 or 2): ")
 
-    print("Enter the edges (vertex pairs):")
-    for _ in range(edges):
-        u, v = map(int, input().split())
-        graph.add_edge(u, v)
+        if choice == '1':
+            color_set = input("Enter the set of colors separated by space: ").split()
+            g.graph_coloring_backtracking(color_set)
+        elif choice == '2':
+            color_set = input("Enter the set of colors separated by space: ").split()
+            g.graph_coloring_branch_and_bound(color_set)
+        else:
+            print("Invalid choice. Please enter '1' or '2'.")
 
-    colors = int(input("Enter the number of colors: "))
-    if graph.graph_coloring(colors):
-        print("Graph can be colored with {} colors".format(colors))
-        print("Coloring:", graph.colored)
-    else:
-        print("Graph cannot be colored with {} colors".format(colors))
-
+        stop = input("Do you want to stop? (yes/no): ").lower()
+        if stop == "yes":
+            break
 
 if __name__ == "__main__":
     main()
