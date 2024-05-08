@@ -1,53 +1,40 @@
 class Graph():
+    def __init__(self,vertices):
+        self.V= vertices
+        self.graph = [[0 for column in range(vertices)] for row in range(vertices)]
 
-    def __init__(self, vertices):
-        self.V = vertices
-        self.graph = [[0 for column in range(vertices)]
-                      for row in range(vertices)]
+    def printMST(self,dist):
+        print("vertex \tDistance from source")
+        for i in range(self.V):
+            print(i,'\t\t',dist[i])
 
-    def printSolution(self, dist):
-        print("Vertex \t Distance from Source")
-        for node in range(self.V):
-            print(node, "\t\t", dist[node])
-
-    def minDistance(self, dist, sptSet):
+    def minkey(self,dist,mstSet):
         min_val = float('inf')
-        min_index = -1
+        min_index = None
         for v in range(self.V):
-            if dist[v] < min_val and not sptSet[v]:
+            if dist[v] < min_val and not mstSet[v]:
                 min_val = dist[v]
                 min_index = v
         return min_index
 
-    def dijkstra(self, src):
+    def dijstra(self,src):
         dist = [float('inf')] * self.V
         dist[src] = 0
-        sptSet = [False] * self.V
-
+        mstSet = [False] * self.V
         for _ in range(self.V):
-            u = self.minDistance(dist, sptSet)
-            sptSet[u] = True
+            u = self.minkey(dist,mstSet)
+            mstSet[u] = True
             for v in range(self.V):
-                if (self.graph[u][v] > 0 and
-                        not sptSet[v] and
-                        dist[v] > dist[u] + self.graph[u][v]):
+                if self.graph[u][v] > 0 and not mstSet[v] and dist[v] > dist[u] + self.graph[u][v]:
                     dist[v] = dist[u] + self.graph[u][v]
+        self.printMST(dist)
 
-        self.printSolution(dist)
+if __name__ == '__main__':
+    vertices = int(input("Enter the number of vertices: "))
+    g = Graph(vertices)
 
-
-# Driver program
-def main():
-    num_vertices = int(input("Enter the number of vertices: "))
-    g = Graph(num_vertices)
-
-    print("Enter the adjacency matrix (enter 0 if there is no direct edge):")
-    for i in range(num_vertices):
-        g.graph[i] = list(map(int, input().split()))
-
+    print("Enter the adjacent matrix: ")
+    for i in range(vertices):
+        g.graph[i] = list(map(int,input().split()))
     source_vertex = int(input("Enter the source vertex: "))
-    g.dijkstra(source_vertex)
-
-
-if __name__ == "__main__":
-    main()
+    g.dijstra(source_vertex)
